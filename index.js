@@ -18,30 +18,33 @@ try {
 }
 
 function moveCardWhenPullRequestClose(apiKey, apiToken) {
-    const departureListId = process.env['TRELLO_DEPARTURE_LIST_ID'];
+    const exitLists = process.env['TRELLO_DEPARTURE_LISTS_ID'];
     const destinationListId = process.env['TRELLO_DESTINATION_LIST_ID'];
     const buildNumber = process.env['GITHUB_RUN_NUMBER'];
     const body = github.context.payload.pull_request.body
     const title = github.context.payload.pull_request.title
     const littlestring = ' ';
     const bigstring = title + littlestring + body;
-    
     const start = async () => {
-      const listOfIds = unique(Array.from(matchAll(bigstring, /#(\d+)/g).toArray(), m => +m));
-    
-      if (listOfIds.length == 0) return;
+        const listOfIds = unique(Array.from(matchAll(bigstring, /#(\d+)/g).toArray(), m => +m));
       
-      const cards = await getCardsOfList(apiKey, apiToken, departureListId);
-      
-      cards
-        .filter(el => listOfIds.includes(el.idShort))
-        .forEach(card => {
+        if (listOfIds.length == 0) return;
     
-          putCard(apiKey, apiToken, card.id, destinationListId);
-          addBuildComment(apiKey, apiToken, card.id, buildNumber); 
-        });
-    }
-    start();
+        let cards = [];
+    
+        for (item of exitLists) {
+            const newCards = await getCardsOfList(apiKey, apiToken, item);
+            cards = [...cards, ...newCards];
+        }
+        
+        cards
+            .filter(card => listOfIds.includes(card.idShort))
+            .forEach(card => {
+                putCard(apiKey, apiToken, card.id, destinationListId);
+                addBuildComment(apiKey, apiToken, card.id, buildNumber); 
+            });
+      }
+      start();  
 }
 
 function getCardsOfList(apiKey, apiToken, listId) {
