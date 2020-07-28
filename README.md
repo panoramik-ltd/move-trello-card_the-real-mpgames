@@ -13,7 +13,7 @@ TRELLO_API_TOKEN: Your Trello API token
 
 TRELLO_DEPARTURE_LIST_ID: Your Trello list ID to move from 
 
-TRELLO_DESTINATION_LIST_ID: Your Trello list ID to move to
+TRELLO_DESTINATION_LISTS_ID: Your Trello lists IDs to move to
 
 How to use:
 
@@ -25,4 +25,4 @@ How to use:
           TRELLO_API_KEY:  ${{ secrets.TRELLO_API_KEY }}
           TRELLO_API_TOKEN: ${{ secrets.TRELLO_API_TOKEN }}
           TRELLO_DEPARTURE_LIST_ID: ${{ secrets.TRELLO_DEPARTURE_LIST_ID }}
-          TRELLO_DESTINATION_LIST_ID: ${{ secrets.TRELLO_DESTINATION_LIST_ID }}
+          TRELLO_DESTINATION_LISTS_ID: ["id1", "id2"]
