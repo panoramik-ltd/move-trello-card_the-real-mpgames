@@ -18,7 +18,7 @@ try {
 }
 
 function moveCardWhenPullRequestClose(apiKey, apiToken) {
-    const exitLists = JSON.parse(process.env.['TRELLO_DEPARTURE_LISTS_ID']);
+    const exitLists = JSON.parse(process.env.TRELLO_DEPARTURE_LISTS_ID);
     const destinationListId = process.env['TRELLO_DESTINATION_LIST_ID'];
     const buildNumber = process.env['GITHUB_RUN_NUMBER'];
     const body = github.context.payload.pull_request.body
