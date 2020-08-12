@@ -5,88 +5,76 @@ const matchAll = require("match-all");
 const unique = require('array-unique');
 
 try {
-    const apiKey = process.env['TRELLO_API_KEY'];
-    const apiToken = process.env['TRELLO_API_TOKEN'];
-    const action = core.getInput('trello-action');
+    const jiraEmail = process.env['JIRA_EMAIL'];
+    const jiraToken = process.env['JIRA_API_TOKEN'];
+    const jiraUrl = process.env['JIRA_URL']
+    const action = core.getInput('jira-action');
     switch (action) {
-        case 'move_card_when_pull_request_closed':
-            moveCardWhenPullRequestClose(apiKey, apiToken);
+        case 'move_issue_when_pull_request_closed':
+            moveIssueWhenPullRequestClose(jiraEmail, jiraToken, jiraUrl);
             break;
     }
 } catch (error) {
     core.setFailed(error.message);
 }
 
-function moveCardWhenPullRequestClose(apiKey, apiToken) {
-    const exitLists = JSON.parse(process.env.TRELLO_DEPARTURE_LISTS_ID);
-    const destinationListId = process.env['TRELLO_DESTINATION_LIST_ID'];
+function moveIssueWhenPullRequestClose(jiraEmail, jiraToken, jiraUrl) {
+    const transitionId = process.env['JIRA_TRANSITION_ID'];
     const buildNumber = process.env['GITHUB_RUN_NUMBER'];
     const body = github.context.payload.pull_request.body
     const title = github.context.payload.pull_request.title
     const littlestring = ' ';
     const bigstring = title + littlestring + body;
     const start = async () => {
-        const listOfIds = unique(Array.from(matchAll(bigstring, /#(\d+)/g).toArray(), m => +m));
-      
+        const listOfIds = unique( matchAll(bigstring,  /(LH\-[0-9]{1,5})/g).toArray());
         if (listOfIds.length == 0) return;
-    
-        let cards = [];
-    
-        for (item of exitLists) {
-            const newCards = await getCardsOfList(apiKey, apiToken, item);
-            cards = [...cards, ...newCards];
-        }
-        
-        cards
-            .filter(card => listOfIds.includes(card.idShort))
-            .forEach(card => {
-                putCard(apiKey, apiToken, card.id, destinationListId);
-                addBuildComment(apiKey, apiToken, card.id, buildNumber); 
-            });
+        for (item of listOfIds) {
+            moveIssue(jiraEmail, jiraToken, jiraUrl, item, transitionId, );
+            addBuildComment(jiraEmail, jiraToken, jiraUrl, item, buildNumber);
+        }  
       }
-      start();  
+      start();     
 }
 
-function getCardsOfList(apiKey, apiToken, listId) {
-    return new Promise(function (resolve, reject) {
-        request(`https://api.trello.com/1/lists/${listId}/cards?key=${apiKey}&token=${apiToken}`)
-            .then(function (body) {
-                resolve(JSON.parse(body));
-            })
-            .catch(function (error) {
-                reject(error);
-            })
-    });
-}
-function putCard(apiKey, apiToken, cardId, destinationListId) {
+function moveIssue(jiraEmail, jiraToken, jiraUrl, issueId, transitionId) {
     const options = {
-        method: 'PUT',
-        url: `https://api.trello.com/1/cards/${cardId}?key=${apiKey}&token=${apiToken}`,
-        form: {
-            'idList': destinationListId,
-        }
+        method: 'POST',
+        url: `https://${jiraUrl}/rest/api/2/issue/${issueId}/transitions`,
+        auth: {
+            username: jiraEmail,
+            password: jiraToken
+        },
+        body: {
+            "update": {},
+            "transition": {
+            "id": transitionId
+            },
+            },
+        json: true,
     }
-    return new Promise(function (resolve, reject) {
+    return new Promise(function (reject) {
         request(options)
-            .then(function (body) {
-                resolve(JSON.parse(body));
-            })
             .catch(function (error) {
                 reject(error);
             })
     });
 }
 
-function addBuildComment(apiKey, apiToken, cardId, buildNumber) {
+function addBuildComment(jiraEmail, jiraToken, jiraUrl, issueId, buildNumber) {
   const options = {
     method: 'POST',
-    url: `https://api.trello.com/1/cards/${cardId}/actions/comments?key=${apiKey}&token=${apiToken}&text=Build number: ${buildNumber}`,
+    url: `https://${jiraUrl}/rest/api/2/issue/${issueId}/comment`,
+    auth: {
+        username: jiraEmail,
+        password: jiraToken
+    },
+    body: {
+        'body': `Build number: ${buildNumber}`,
+      },
+      json: true
   }
-  return new Promise(function(resolve, reject) {
+  return new Promise(function(reject) {
     request(options)
-      .then(function(body) {
-        resolve(JSON.parse(body));
-      })
       .catch(function(error) {
         reject(error);
       })

@@ -1,28 +1,28 @@
-# move-trello-card
+# move-jira-issue
 
 This action based on jessicazu/trello-github-actions and made for:
 
-* Finding card number(s) in PR body and title
-* Moving trello card(s) from one list to another + adding comment to the trello card with build number (from variable GITHUB_RUN_NUMBER).
+* Finding issue number(s) in PR body and title
+* Changing jira issue(s) status + adding comment to the jira issue with build number (from variable GITHUB_RUN_NUMBER).
 
 Env: 
 
-TRELLO_API_KEY: Your Trello API key
+JIRA_EMAIL: Your Jira email
 
-TRELLO_API_TOKEN: Your Trello API token
+JIRA_API_TOKEN: Your Jira API token
 
-TRELLO_DEPARTURE_LISTS_ID: Your Trello list ID to move from 
+JIRA_URL: Your Jira domain name
 
-TRELLO_DESTINATION_LIST_ID: Your Trello lists IDs to move to
+JIRA_TRANSITION_ID: transition ID of your issue https://docs.atlassian.com/software/jira/docs/api/REST/7.6.1/#api/2/issue-getTransitions
 
 How to use:
 
-      - name: Move trello card 
-        uses: the-real-mpgames/move-trello-card@v2
+      - name: Move jira issue 
+        uses: the-real-mpgames/move-jira-issue@v3
         with:
-          trello-action: move_card_when_pull_request_closed
+          jira-action: move_issue_when_pull_request_closed
         env:
-          TRELLO_API_KEY:  ${{ secrets.TRELLO_API_KEY }}
-          TRELLO_API_TOKEN: ${{ secrets.TRELLO_API_TOKEN }}
-          TRELLO_DEPARTURE_LIST_ID: ["id1", "id2"]
-          TRELLO_DESTINATION_LIST_ID: ${{ secrets.TRELLO_DESTINATION_LIST_ID }}
+          JIRA_EMAIL:  ${{ secrets.JIRA_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          JIRA_URL: ${{ secrets.JIRA_URL }}
+          JIRA_TRANSITION_ID: "41"
